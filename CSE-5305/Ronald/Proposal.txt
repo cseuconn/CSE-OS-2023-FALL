@@ -1,0 +1,5 @@
+Synchronization Testing
+
+  The main goal of my project is to test the overhead costs of various synchronization mechanisms. These include atomic variables, spin lock, mutex, semaphore, and conditional variables.
+I also plan to compare these using an example program. Lastly, I plan to see how the number of threads impacts the run time of the example program, and how this changes if there are more
+threads than cores.
