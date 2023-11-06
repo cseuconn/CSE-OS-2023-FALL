@@ -1,0 +1,1 @@
+The project our group (Ishan, Eric, Ron, Richard) will be doing is implementing a CPU Scheduler, more specifically the Multi-Level Feedback Queue, in C++.
