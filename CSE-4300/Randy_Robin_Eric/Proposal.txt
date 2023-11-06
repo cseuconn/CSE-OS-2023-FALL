@@ -1,0 +1,7 @@
+Group Members: Randy Yu, Robin Pan, Eric Collins
+
+Topic: CPU Scheduling
+
+We will implment a CPU scheduler in C that allows the user to select the type of queue they wish to use (First Come First Served, Round Robin, Shortest Remaining Time First) and output the turnaround time
+and waiting time of each process, along with the average turnaround time and waiting time. We will allow the user to queue as many processes as they want and allow them to define the arrival and burst times,
+then output the corresponding times based on which queue type they select. 
