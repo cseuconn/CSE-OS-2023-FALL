@@ -1,4 +1,4 @@
-Group Members: Randy Yu, Robin Pan
+Group Members: Randy Yu, Robin Pan, Eric Collins
 
 Topic: CPU Scheduling
 
