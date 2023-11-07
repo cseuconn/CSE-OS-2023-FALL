@@ -1,0 +1,3 @@
+We plan on implementing the Multi-Level Feedback Queue, FIFO, SJF, and SRTCF CPU schedulers in OS161. 
+Tests will be written to compare the performance of each scheduler to that of the existing OS161 scheduler (Round Robin).
+The Round Robin scheduler in OS161 may not be optimal for all workloads. Thus, we will implement the other schedulers to improve performance in various cases.
