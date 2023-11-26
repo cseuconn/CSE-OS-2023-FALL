@@ -1,0 +1,6 @@
+Averages over 1000 runs
+
+atomic: 214 cycles 	 0.000112 seconds
+spinlock: 72 cycles 	 0.000044 seconds
+mutex: 86 cycles 	 0.000056 seconds
+semaphore: 173 cycles 	 0.000146 seconds
