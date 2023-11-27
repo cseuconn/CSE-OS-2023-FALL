@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 struct process {
     int pid;
@@ -188,6 +189,7 @@ int main(int argc, char *argv[]) {
     int n; // num of processes
     printf("Enter the number of processes: ");
     scanf("%d", &n);
+
     struct process *processes = malloc(n * sizeof(struct process));
 
     for (int i = 0; i < n; i++) {
@@ -196,8 +198,6 @@ int main(int argc, char *argv[]) {
         printf("Enter the burst time of process %d: ", i + 1);
         scanf("%d", &processes[i].burst_time);
         processes[i].pid = i + 1;
-        processes[i].is_completed = 0;
-        processes[i].remaining_time = processes[i].burst_time;
     }
 
     display_process_table(processes, n, 0);
@@ -206,6 +206,12 @@ int main(int argc, char *argv[]) {
         printf("\nSelect scheduling algorithm:\n1. FCFS\n2. RR\n3. SRTF\n4. Quit\nChoice: ");
         scanf("%d", &choice);
         printf("\n");
+
+        for (int i = 0; i < n; i++) {
+            processes[i].is_completed = 0;
+            processes[i].remaining_time = processes[i].burst_time;
+        }
+
     switch(choice) {
         case 1:
             fcfsScheduling(processes, n);
