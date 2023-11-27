@@ -1,9 +1,11 @@
+# Virtual File System via Python Ver.1.0
+
 class VirtualFileSystem:
     def __init__(self):
         # Initializes the virtual file system with a default admin user
         # and sets up the necessary data structures for file and directory management.
         self.current_user = None
-        self.users = {"admin": {"password": "password", "root": {"type": "dir", "children": {}}}}
+        self.root = {}  # Root directory containing user directory entries
         self.current_dir = None
         self.open_files = {}
         self.path = []  # To keep track of the current path
@@ -26,21 +28,24 @@ class VirtualFileSystem:
         print("  rd [dirname]                     - Remove a directory")
         print("  exit                             - Exit the program")
         print("Type 'exit' to quit the program.")
-    
 
     def register(self, username, password):
         # Allows a new user to register in the system.
-        if username in self.users:
+        if username in self.root:
             return "User already exists."
         else:
-            self.users[username] = {"password": password, "root": {"type": "dir", "children": {}}}
+            self.root[username] = {
+                "username": username,
+                "password": password,
+                "FAT": {"type": "dir", "children": {}}  # User File Allocation Table (FAT)
+            }
             return f"User '{username}' registered successfully."
 
     def login(self, username, password):
         # Handles the login functionality for a user.
-        if username in self.users and self.users[username]["password"] == password:
+        if username in self.root and self.root[username]["password"] == password:
             self.current_user = username
-            self.current_dir = self.users[username]["root"]
+            self.current_dir = self.root[username]["FAT"]  # Point to the user's FAT
             self.path = []
             return f"User '{username}' logged in successfully."
         else:
@@ -126,7 +131,7 @@ class VirtualFileSystem:
 
     def _update_current_dir(self):
         # A helper method to update the current working directory based on the path.
-        self.current_dir = self.users[self.current_user]["root"]
+        self.current_dir = self.root[self.current_user]["FAT"]
         for dir in self.path:
             self.current_dir = self.current_dir["children"][dir]
 
@@ -137,7 +142,7 @@ class VirtualFileSystem:
             return f"Directory '{dirname}' deleted."
         else:
             return "Directory not found or is a file."
-
+        
     def md(self, dirname):
         # Creates a new directory in the current directory.
         if dirname not in self.current_dir["children"]:
@@ -174,10 +179,10 @@ class VirtualFileSystem:
             return self.write(args[1], " ".join(args[2:]))
         elif cmd == "cd" and len(args) == 2:
             return self.cd(args[1])
-        elif cmd == "rd" and len(args) == 2:
-            return self.rd(args[1])
         elif cmd == "md" and len(args) == 2:
             return self.md(args[1])
+        elif cmd == "rd" and len(args) == 2:
+            return self.rd(args[1])
         else:
             return "Invalid command or incorrect number of arguments."
 
