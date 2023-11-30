@@ -1,0 +1,53 @@
+FROM arm64v8/ubuntu:23.10
+
+LABEL maintainer="dev@jianchang.su"
+
+# Set non-interactive apt installations
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Add the LLVM repository
+RUN apt-get update && \
+    apt-get install -y software-properties-common wget jq curl gnupg2 && \
+    wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/llvm-archive-keyring.gpg && \
+    echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy main" > /etc/apt/sources.list.d/llvm.list && \
+    echo "deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy main" >> /etc/apt/sources.list.d/llvm.list
+
+# Install development tools, utilities, and zsh
+RUN apt-get update && \
+    apt-get install -y \
+    clang-18 \
+    clang-tidy-18 \
+    lldb \
+    # libstdc++-13-dev \
+    libc++-18-dev \
+    libc++abi-18-dev \
+    git \
+    unzip \
+    zsh && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install latest CMake
+RUN CMAKE_VERSION=$(wget -qO- "https://api.github.com/repos/Kitware/CMake/releases/latest" | jq -r .tag_name | tr -d 'v') && \
+    wget -qO- "https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION-linux-aarch64.tar.gz" | tar --strip-components=1 -xz -C /usr/local
+
+RUN wget -qO- "https://github.com/userdocs/qbt-ninja-build/releases/download/v1.12.0/ninja-aarch64" -O /usr/local/bin/ninja && \
+    chmod +x /usr/local/bin/ninja
+
+# print cmake version
+RUN cmake --version
+
+# Set clang as the default C++ compiler
+RUN update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-18 100
+RUN update-alternatives --install /usr/bin/cc cc /usr/bin/clang-18 100
+
+# Install oh-my-zsh
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+
+# COPY . /CPU_Sched
+# Set working directory
+COPY . /CPU_Sched
+
+WORKDIR /CPU_Sched
+
+CMD ["/bin/zsh"]

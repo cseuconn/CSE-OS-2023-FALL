@@ -1,0 +1,2 @@
+﻿OS161 Memory Reclaim
+Our goal is to implement a simple memory reclaiming system so that after a program/test such as sy2 is run the memory is reclaimed and is able to be used again allowing for more than just two successful runs of the sy2 test.

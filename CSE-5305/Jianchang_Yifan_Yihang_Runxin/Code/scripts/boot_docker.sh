@@ -1,0 +1,1 @@
+docker run -itd --name cpp_dev --pid=host --privileged --net=host -p 1234:1234 --cpus="0.5"  cpp_dev:latest
