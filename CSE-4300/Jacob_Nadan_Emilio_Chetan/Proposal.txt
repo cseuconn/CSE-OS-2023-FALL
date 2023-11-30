@@ -1,0 +1,1 @@
+We will be making a CPU scheduler that uses round robin scheduling in C
