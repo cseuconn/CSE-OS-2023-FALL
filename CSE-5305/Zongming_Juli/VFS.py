@@ -1,14 +1,19 @@
-# Virtual File System via Python Ver.1.0
+# Virtual File System via Python Ver.2.0
 
-class VirtualFileSystem:
+
+class VirtualFileSystem:   
     def __init__(self):
-        # Initializes the virtual file system with a default admin user
-        # and sets up the necessary data structures for file and directory management.
+        # Initialize a virtual file system instance, including user, root directory, current directory,
+        # open files, path tracking, virtual disk space, FAT table and next free space pointer.
         self.current_user = None
         self.root = {}  # Root directory containing user directory entries
         self.current_dir = None
         self.open_files = {}
         self.path = []  # To keep track of the current path
+        self.disk_space = bytearray(1024 * 1024)  # 1MB of virtual disk space
+        self.fat_table = {}  # FAT Table
+        self.next_free_space = 0  # Pointer to the next free space on disk
+
 
     def display_operations(self):
         # Displays the available commands to the user.
@@ -26,8 +31,36 @@ class VirtualFileSystem:
         print("  cd [dirname]                     - Change directory")
         print("  md [dirname]                     - Make a new directory")
         print("  rd [dirname]                     - Remove a directory")
-        print("  exit                             - Exit the program")
+        print("  diskusage                        - Display disk usage")
+        print("  showfat                          - Show FAT table")
         print("Type 'exit' to quit the program.")
+
+    def _build_file_paths(self, current_dir, current_path=""):
+        # Full path to build file
+        file_paths = {}
+        for name, item in current_dir["children"].items():
+            path = current_path + "/" + name
+            if item["type"] == "file":
+                file_paths[name] = path
+            elif item["type"] == "dir":
+                file_paths.update(self._build_file_paths(item, path))
+        return file_paths
+
+    def show_fat_table(self):
+        # Displays the file allocation table (FAT table), which shows the start and end positions of each file.
+        file_paths = self._build_file_paths(self.root[self.current_user]["FAT"])
+        print("FAT Table:")
+        for filename, (start, end) in self.fat_table.items():
+            path = file_paths.get(filename, "Unknown")
+            print(f"  {filename}:")
+            print(f"    Path: {path}")
+            print(f"    Start - {start}, End - {end}")
+
+    def display_disk_usage(self):
+        # Show current disk usage
+        used_space = sum(len(self.disk_space[start:end]) for start, end in self.fat_table.values())
+        total_space = len(self.disk_space)
+        print(f"Disk usage: {used_space}/{total_space} bytes")
 
     def register(self, username, password):
         # Allows a new user to register in the system.
@@ -70,6 +103,7 @@ class VirtualFileSystem:
         # Creates a new file in the current directory.
         if filename not in self.current_dir["children"]:
             self.current_dir["children"][filename] = {"content": "", "type": "file"}
+            self.fat_table[filename] = (self.next_free_space, self.next_free_space)  # initial allocation
             return f"File '{filename}' created."
         else:
             return "File already exists."
@@ -78,6 +112,11 @@ class VirtualFileSystem:
         # Deletes a file from the current directory.
         if filename in self.current_dir["children"]:
             del self.current_dir["children"][filename]
+            file_start, file_end = self.fat_table[filename]
+            self.disk_space[file_start:file_end] = bytearray(file_end - file_start)  # Clear data on disk
+            self.next_free_space = file_start  # Update the next free space pointer
+            del self.fat_table[filename]
+            self.show_fat_table()  
             return f"File '{filename}' deleted."
         else:
             return "File not found."
@@ -108,7 +147,12 @@ class VirtualFileSystem:
     def write(self, filename, content):
         # Writes or appends content to an opened file.
         if filename in self.open_files:
+            file_start, file_end = self.fat_table[filename]
+            new_end = min(file_end + len(content), len(self.disk_space))
+            self.disk_space[file_start:new_end] = content[:new_end - file_start].encode()
             self.open_files[filename]["content"] += content
+            self.fat_table[filename] = (file_start, new_end)
+            self.next_free_space = new_end
             return "Content written to file."
         else:
             return "File not opened."
@@ -130,7 +174,7 @@ class VirtualFileSystem:
             return "Directory not found."
 
     def _update_current_dir(self):
-        # A helper method to update the current working directory based on the path.
+        # Update the current working directory based on the path.
         self.current_dir = self.root[self.current_user]["FAT"]
         for dir in self.path:
             self.current_dir = self.current_dir["children"][dir]
@@ -142,7 +186,7 @@ class VirtualFileSystem:
             return f"Directory '{dirname}' deleted."
         else:
             return "Directory not found or is a file."
-        
+
     def md(self, dirname):
         # Creates a new directory in the current directory.
         if dirname not in self.current_dir["children"]:
@@ -157,6 +201,14 @@ class VirtualFileSystem:
         if not args:
             return "No command entered."
         cmd = args[0].lower()
+        
+        if cmd == "diskusage":
+            self.display_disk_usage()
+            return ""
+        elif cmd == "showfat":
+            self.show_fat_table()
+            return ""
+    
         if cmd == "register" and len(args) == 3:
             return self.register(args[1], args[2])
         elif cmd == "login" and len(args) == 3:
@@ -185,6 +237,7 @@ class VirtualFileSystem:
             return self.rd(args[1])
         else:
             return "Invalid command or incorrect number of arguments."
+
 
 # Create an instance of the VirtualFileSystem
 vfs = VirtualFileSystem()
